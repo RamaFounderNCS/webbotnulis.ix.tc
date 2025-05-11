@@ -1,0 +1,269 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOT NULIS ONLINE BY MR.M05T3R</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }body {
+  font-family: 'Share Tech Mono', monospace;
+  background-color: #0f0f0f;
+  color: #33ff33;
+  overflow-x: hidden;
+}
+
+header {
+  text-align: center;
+  padding: 2rem 1rem;
+  border-bottom: 2px solid #33ff33;
+}
+
+header h1 {
+  font-size: 2rem;
+  color: #33ff33;
+}
+
+main {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+label {
+  font-size: 1.1rem;
+}
+
+textarea {
+  width: 100%;
+  height: 200px;
+  background: #000;
+  border: 2px solid #33ff33;
+  color: #33ff33;
+  padding: 1rem;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+select, button {
+  background-color: #000;
+  color: #33ff33;
+  border: 2px solid #33ff33;
+  padding: 0.75rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+button:hover, select:hover {
+  background-color: #33ff33;
+  color: #000;
+}
+
+.output {
+  background: #000;
+  border: 2px solid #33ff33;
+  padding: 1rem;
+  white-space: pre-wrap;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.controls button {
+  flex: 1 1 200px;
+}
+
+.share {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.share a {
+  color: #33ff33;
+  text-decoration: none;
+  border: 1px solid #33ff33;
+  padding: 0.5rem 1rem;
+  transition: background 0.3s;
+}
+
+.share a:hover {
+  background-color: #33ff33;
+  color: #000;
+}
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.8rem;
+  border-top: 1px solid #33ff33;
+}
+
+#handwritingImage {
+  max-width: 100%;
+  margin-top: 1rem;
+  border: 2px solid #33ff33;
+  display: none;
+}
+
+.loading {
+  text-align: center;
+  font-style: italic;
+  display: none;
+}
+
+@media (max-width: 600px) {
+  main {
+    padding: 1rem;
+  }
+}
+
+  </style>
+</head><body onload="loadFromLocalStorage()">
+  <header>
+    <h1>BOT NULIS ONLINE BY MR.M05T3R</h1>
+  </header>
+  <main>
+    <label for="input">Masukkan Teks Anda:</label>
+    <textarea id="input" placeholder="Tulis sesuatu..." oninput="saveToLocalStorage()"></textarea><div class="controls">
+  <select id="fontSelector" onchange="saveToLocalStorage()">
+    <option value="Share Tech Mono">Share Tech Mono</option>
+    <option value="Courier New">Courier New</option>
+    <option value="Monaco">Monaco</option>
+    <option value="Lucida Console">Lucida Console</option>
+  </select>
+  <button onclick="convertText()">Tulis!</button>
+  <button onclick="downloadText()">Download</button>
+  <button onclick="printPDF()">Cetak PDF</button>
+  <button onclick="clearAll()">Bersihkan</button>
+  <button onclick="generateHandwriting()">Tulis Manual</button>
+  <button onclick="startVoiceToText()">Suara ke Teks</button>
+</div>
+
+<div class="output" id="output"></div>
+<div class="loading" id="loading">Sedang mengubah ke tulisan tangan...</div>
+<img id="handwritingImage" alt="Tulisan Manual Akan Muncul di Sini" />
+
+<div class="share">
+  <a id="waShare" href="#" target="_blank">Bagikan ke WhatsApp</a>
+  <a id="tgShare" href="#" target="_blank">Bagikan ke Telegram</a>
+</div>
+
+  </main>
+  <footer>
+    Dibuat oleh MR.M05T3R | Tema Hacker Profesional | Versi Lanjutan
+  </footer>  <script>
+    function convertText() {
+      const input = document.getElementById('input').value;
+      const output = document.getElementById('output');
+      const font = document.getElementById('fontSelector').value;
+      output.style.fontFamily = font;
+      output.textContent = `Menulis...\n\n${input}`;
+      updateShareLinks(input);
+      saveToLocalStorage();
+    }
+
+    function downloadText() {
+      const text = document.getElementById('output').textContent;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'hasil-nulis.txt';
+      link.click();
+    }
+
+    function printPDF() {
+      const output = document.getElementById('output').textContent;
+      const newWin = window.open('', '', 'width=600,height=800');
+      newWin.document.write(`
+        <pre style="font-family: monospace; white-space: pre-wrap; color: #000">${output}</pre>`);
+  newWin.document.close();
+  newWin.print();
+}
+
+function clearAll() {
+  document.getElementById('input').value = '';
+  document.getElementById('output').textContent = '';
+  document.getElementById('handwritingImage').style.display = 'none';
+  document.getElementById('loading').style.display = 'none';
+  localStorage.clear();
+}
+
+async function generateHandwriting() {
+  const text = document.getElementById('input').value;
+  const image = document.getElementById('handwritingImage');
+  const loading = document.getElementById('loading');
+
+  if (!text.trim()) {
+    alert("Silakan masukkan teks terlebih dahulu.");
+    return;
+  }
+
+  loading.style.display = 'block';
+  image.style.display = 'none';
+
+  try {
+    const url = `https://api.handwrite.io/v1/render?text=${encodeURIComponent(text)}&handwriting_id=5&api_key=YOUR_API_KEY`;
+    image.src = url;
+    image.onload = () => {
+      loading.style.display = 'none';
+      image.style.display = 'block';
+    };
+    image.onerror = () => {
+      loading.style.display = 'none';
+      alert('Gagal memuat gambar tulisan tangan.');
+    };
+  } catch (error) {
+    console.error('Terjadi kesalahan:', error);
+    loading.style.display = 'none';
+    alert('Gagal menghubungi API tulisan tangan.');
+  }
+}
+
+function updateShareLinks(text) {
+  const encoded = encodeURIComponent(text);
+  document.getElementById('waShare').href = `https://wa.me/?text=${encoded}`;
+  document.getElementById('tgShare').href = `https://t.me/share/url?url=&text=${encoded}`;
+}
+
+function startVoiceToText() {
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = 'id-ID';
+  recognition.start();
+
+  recognition.onresult = function(event) {
+    const transcript = event.results[0][0].transcript;
+    document.getElementById('input').value += transcript;
+    convertText();
+  };
+
+  recognition.onerror = function(event) {
+    alert('Gagal mengenali suara: ' + event.error);
+  };
+}
+
+function saveToLocalStorage() {
+  localStorage.setItem('bot_nulis_input', document.getElementById('input').value);
+  localStorage.setItem('bot_nulis_font', document.getElementById('fontSelector').value);
+}
+
+function loadFromLocalStorage() {
+  const savedText = localStorage.getItem('bot_nulis_input');
+  const savedFont = localStorage.getItem('bot_nulis_font');
+  if (savedText) document.getElementById('input').value = savedText;
+  if (savedFont) document.getElementById('fontSelector').value = savedFont;
+}
+
+  </script>
+</body></html>
